@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>µIMGs</title>
+        <title>µIMG</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
@@ -67,7 +67,7 @@
         <div class="flex-center position-ref full-height">
             <div class="content">
                 <div class="title m-b-md">
-                    µIMGs
+                    µIMG
                 </div>
 
                 <p>
@@ -75,7 +75,7 @@
                 </p>
 
                 <div class="links">
-                    <a href="https://github.com/thomasjsn/uimgs">Github</a>
+                    <a href="https://github.com/thomasjsn/uimg">Github</a>
                     <a href="https://www.uctrl.net/about">Author</a>
                 </div>
             </div>

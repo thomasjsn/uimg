@@ -22,11 +22,11 @@ class UploadController extends Controller
     public function create(Request $request)
     {
         $file = $request->file('file');
-        $checksum = sha1_file($file);
+        $fileContent = file_get_contents($file);
         $size = $file->getClientSize();
         $hash = $this->getNewHash();
 
-        Storage::disk()->put($hash, file_get_contents($file));
+        Storage::disk()->put($hash, $fileContent);
 
         $type = exif_imagetype($file); //http://www.php.net/manual/en/function.exif-imagetype.php
         switch($type)
@@ -45,12 +45,15 @@ class UploadController extends Controller
 				   $img->profileImage("icc", $profiles['icc']);
 				}
                 $ext = 'jpg';
+                $fileContent = $img->getImagesBlob();
+                $img->destroy();
             break;
             default:
-                return response()->json(['status'=>'error','reason'=>'Not a valid image']);
+                return response()->json(['status'=>'error','reason'=>'Not a valid image'], 400);
         }
 
         $filename = $hash . '.' . $ext;
+        $checksum = sha1_file($file);
         $url = env('APP_URL') . '/' . $filename;
 
         if (DB::table('images')->where('checksum', $checksum)->count() > 0) {
@@ -61,8 +64,7 @@ class UploadController extends Controller
             ]);
         }
 
-        Storage::disk('minio')->put($filename . '/' . $filename, $img->getImagesBlob());
-        $img->destroy();
+        Storage::disk('minio')->put($filename . '/' . $filename, $fileContent);
 
         DB::table('images')->insert([
             'id' => $hash,
