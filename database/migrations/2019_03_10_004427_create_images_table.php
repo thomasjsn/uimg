@@ -20,7 +20,7 @@ class CreateImagesTable extends Migration
             $table->string('checksum');
             $table->integer('size')->unsigned();
             $table->integer('accessed')->unsigned()->default(0);
-            $table->timestamp('timestamp');
+            $table->timestamp('timestamp')->nullable();
         });
     }
 

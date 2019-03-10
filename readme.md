@@ -3,7 +3,7 @@
 
 > This is still very much a work in progress, use at own risk.
 
-## Feature
+## Features
 * CLI upload
 * On-the-fly image resizing
 * Auto-rotate and strip exif data on upload
@@ -28,6 +28,9 @@ Images can be resized by adding dimensions to the URL, e.g.: `/300x300/1u5c7w.jp
 * Imagick
 * S3 compatible storage (like [Minio](https://github.com/minio/minio))
 
+## Install
+TBD
+
 ## CLI upload
 Example of upload CLI function:
 ```
@@ -35,7 +38,7 @@ uimg () {
     curl -s -F "file=@${1:--}" https://your.uimg.instance/upload | jq -r
 }
 ```
-> Package `jq` required for json decoding.
+Package `jq` required for json decoding.
 
 Usage:
 ```
@@ -59,6 +62,24 @@ If you try to upload an image already uploaded, the URL of that image will be re
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
+
+## Database
+Each image upload is stored in the database;
+```
++--------+------------+------------+------------------------------------------+---------+----------+---------------------+
+| id     | filename   | mime_type  | checksum                                 | size    | accessed | timestamp           |
++--------+------------+------------+------------------------------------------+---------+----------+---------------------+
+| r49x4m | r49x4m.jpg | image/jpeg | 28bd49f1a3f9070f24f825872f269b5d0c64f8d8 | 6503961 |        3 | 2019-03-11 00:16:57 |
++--------+------------+------------+------------------------------------------+---------+----------+---------------------+
+```
+
+* `id`: the unique hash generated for each image upload
+* `filename`: hash + file extension
+* `mime_type`: used for returning correct `Content-Type` header
+* `checksum`: sha1 checksum of image file, after exif removal and auto rotation, used for finding duplicates
+* `size`: size of uploaded image, allows for different expire rules for large files
+* `accessed`: number of times the image file was requested, both original and resized the counted, used for purging images with no views
+* `timestamp`: data and time of image upload
 
 ## Scheduler
 To run the scheduler a cron job must be added;
