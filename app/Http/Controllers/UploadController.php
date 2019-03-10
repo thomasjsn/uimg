@@ -57,6 +57,9 @@ class UploadController extends Controller
         $url = env('APP_URL') . '/' . $filename;
 
         if (DB::table('images')->where('checksum', $checksum)->count() > 0) {
+            \Log::info('Image already uploaded', ['img' => $filename]);
+            Storage::disk()->delete($hash);
+
             return response()->json([
                 'status'=>'ok',
                 'message'=>'Image already uploaded',
@@ -81,7 +84,9 @@ class UploadController extends Controller
             'status' => 'ok',
             'message' => 'Image successfully uploaded',
 			'url' => $url
-		];
+        ];
+
+        \Log::info('Image successfully uploaded', ['img' => $filename]);
 
         return response()->json($response);
     }

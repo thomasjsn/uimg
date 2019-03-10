@@ -23,8 +23,10 @@ class HomeController extends Controller
         $images = DB::table('images')->count();
         $size = DB::table('images')->sum('size');
         $size = $this->formatBytes($size);
+        $last = DB::table('images')->orderBy('timestamp', 'desc')->first();
+        $last = \Carbon\Carbon::createFromTimeString($last->timestamp)->diffForHumans();
 
-        return view('home', compact('images', 'size'));
+        return view('home', compact('images', 'size', 'last'));
     }
 
 }

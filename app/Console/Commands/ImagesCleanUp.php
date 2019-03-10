@@ -42,6 +42,7 @@ class ImagesCleanUp extends Command
         foreach ($neverAccessed as $image) {
             $this->info($image->filename);
             Storage::disk('minio')->deleteDirectory($image->filename);
+            DB::table('images')->where('id', $image->id)->delete();
         }
     }
 }

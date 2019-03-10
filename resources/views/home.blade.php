@@ -71,7 +71,7 @@
                 </div>
 
                 <p>
-                {{ $images }} images — {{ $size }}
+                {{ $images }} {{ str_plural('image', $images) }} — {{ $size }} — last upload {{ $last }}
                 </p>
 
                 <div class="links">
