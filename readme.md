@@ -16,10 +16,6 @@ All images, uploaded and resized, are stored on a S3 backend, I use [Minio](http
 
 µIMG is meant to be placed behind a caching service, like a CDN, Cloudflare or a caching nginx web server.
 
-Each image has an `accessed` value that increases by one each time the image is viewed. This counter is mostly useless, since this service is meant be be behind a caching layer. But it can be used to determined if the image has been accessed at all. Images that have never been viewed, and are a week old will be purged.
-
-Images can be resized by adding dimensions to the URL, e.g.: `/300x300/1u5c7w.jpg`, image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests.
-
 ## Requirements
 * nginx (untested on Apache)
 * PHP 7.x
@@ -51,6 +47,8 @@ Response:
 {
   "status": "ok",
   "message": "Image successfully uploaded",
+  "image_id": "1u5c7w",
+  "token": "7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6",
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
@@ -77,6 +75,38 @@ echo $UIMG | jq -r
 
 This will upload the image, and put the returned URL in the clipboard. This is useful because running the command from inside Ranger doesn't give the user time to view or copy the output. The script requires `jq` and `xclip`.
 
+## Delete
+When uploading an image a token is returned with the response, this token can be used to delete the image. Curl example:
+```
+curl -X "DELETE" "https://your.uimg.instance/ei10v8/7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6"
+```
+
+A 204 (empty response) code will be returned if delete was successful.
+
+## Resize
+Images can be resized by adding dimensions to the URL, e.g.:
+```
+/300x300/1u5c7w.jpg
+```
+Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests.
+
+## Cleanup
+Running the cleanup command `artisan images:cleanup` will:
+
+* Delete images older than 1 week that have not been viewed
+* Delete images that have not been viewed in 1 year
+
+Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `accessed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `accessed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
+
+### Scheduler
+To run the scheduler a cron job must be added;
+```
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
+
+
 ## Database
 Each image upload is stored in the database;
 ```
@@ -94,14 +124,6 @@ Each image upload is stored in the database;
 * `size`: size of uploaded image, allows for different expire rules for large files
 * `accessed`: number of times the image file was requested, both original and resized the counted, used for purging images with no views
 * `timestamp`: data and time of image upload
-
-## Scheduler
-To run the scheduler a cron job must be added;
-```
-* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
-```
-
-Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
 
 ## Nginx config
 ```

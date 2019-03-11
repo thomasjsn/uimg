@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use DB;
 use Storage;
 
@@ -64,10 +65,12 @@ class UploadController extends Controller
                 'status'=>'ok',
                 'message'=>'Image already uploaded',
                 'url' => env('APP_URL') . '/' . DB::table('images')->where('checksum', $checksum)->value('filename')
-            ]);
+            ], 200);
         }
 
         Storage::disk('minio')->put($filename . '/' . $filename, $fileContent);
+
+        $token = bin2hex(random_bytes(32));
 
         DB::table('images')->insert([
             'id' => $hash,
@@ -75,7 +78,8 @@ class UploadController extends Controller
             'mime_type' => mime_content_type(realpath('../storage/app/' . $hash)),
             'checksum' => $checksum,
             'size' => $size,
-            'timestamp' => \Carbon\Carbon::now()
+            'token' => $token,
+            'timestamp' => Carbon::now()
         ]);
 
         Storage::disk()->delete($hash);
@@ -83,35 +87,42 @@ class UploadController extends Controller
 		$response = [
             'status' => 'ok',
             'message' => 'Image successfully uploaded',
+            'image_id' => $hash,
+            'token' => $token,
 			'url' => $url
         ];
 
         \Log::info('Image successfully uploaded', ['img' => $filename]);
 
-        return response()->json($response);
+        return response()->json($response, 201);
     }
 
 
-	private function getNewHash($length=6)
-	{
+	private function getNewHash($length = 6)
+    {
+        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+
 		while(1)
 		{
-			$hash = $this->getRandomString($length);
+			$hash = $this->generateString($permitted_chars, $length);
 			if (DB::table('images')->where('id', $hash)->count() == 0) return $hash;
 			$length++;
 		}
 	}
 
 
-	private function getRandomString($length=32, $keyspace = '0123456789abcdefghijklmnopqrstuvwxyz')
-	{
-		$str = '';
-		$max = mb_strlen($keyspace, '8bit') - 1;
-		for ($i = 0; $i < $length; ++$i) {
-			$str .= $keyspace[rand(0, $max)];
+    private function generateString($input, $strength)
+    {
+		$input_length = mb_strlen($input, '8bit');
+        $random_string = '';
+
+		for($i = 0; $i < $strength; $i++) {
+			$random_string .= $input[mt_rand(0, $input_length - 1)];
 		}
-		return $str;
-    }
+
+		return $random_string;
+	}
+
 
 	function autoRotateImage($image) {
 		$orientation = $image->getImageOrientation();

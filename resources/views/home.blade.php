@@ -70,6 +70,10 @@
                     µIMG
                 </div>
 
+<pre>
+cat my-image.jpg | curl -s -F "file=@${1:--}" {{ env('APP_URL') }}/upload
+</pre>
+
                 <p>
                 {{ $images }} {{ str_plural('image', $images) }} — {{ $size }} — last upload {{ $last }}
                 </p>

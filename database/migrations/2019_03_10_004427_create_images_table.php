@@ -19,7 +19,8 @@ class CreateImagesTable extends Migration
             $table->string('mime_type');
             $table->string('checksum');
             $table->integer('size')->unsigned();
-            $table->integer('accessed')->unsigned()->default(0);
+            $table->string('token');
+            $table->timestamp('accessed')->nullable();
             $table->timestamp('timestamp')->nullable();
         });
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use DB;
 use Storage;
 
@@ -31,7 +32,7 @@ class DisplayController extends Controller
 
         if (is_null($type)) abort(404);
 
-        DB::table('images')->where('id', $file)->increment('accessed');
+        DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);
 
         return response($image, 200)->header('Content-Type', $type);
     }
@@ -54,7 +55,7 @@ class DisplayController extends Controller
 
         if (is_null($type)) abort(404);
 
-        DB::table('images')->where('id', $file)->increment('accessed');
+        DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);
 
         return response($image, 200)->header('Content-Type', $type);
     }
