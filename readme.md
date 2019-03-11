@@ -1,5 +1,5 @@
 # µIMG
-µIMG (micro image) is a tiny self hosted image dump service, with no UI for uploading — only CLI. Inspired by [PictShare](https://pictshare.net/).
+µIMG (micro image) is a tiny self hosted image dump service, with no UI for uploading — only CLI. Inspired by [PictShare](https://pictshare.net/) and built with [Lumen](https://lumen.laravel.com/).
 
 > This is still very much a work in progress, use at own risk.
 
