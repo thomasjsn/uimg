@@ -109,21 +109,17 @@ Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
 
 ## Database
 Each image upload is stored in the database;
-```
-+--------+------------+------------+------------------------------------------+---------+----------+---------------------+
-| id     | filename   | mime_type  | checksum                                 | size    | accessed | timestamp           |
-+--------+------------+------------+------------------------------------------+---------+----------+---------------------+
-| r49x4m | r49x4m.jpg | image/jpeg | 28bd49f1a3f9070f24f825872f269b5d0c64f8d8 | 6503961 |        3 | 2019-03-11 00:16:57 |
-+--------+------------+------------+------------------------------------------+---------+----------+---------------------+
-```
 
-* `id`: the unique hash generated for each image upload
-* `filename`: hash + file extension
-* `mime_type`: used for returning correct `Content-Type` header
-* `checksum`: sha1 checksum of image file, after exif removal and auto rotation, used for finding duplicates
-* `size`: size of uploaded image, allows for different expire rules for large files
-* `accessed`: number of times the image file was requested, both original and resized the counted, used for purging images with no views
-* `timestamp`: data and time of image upload
+| Field | Usage |
+| ----- | ----- |
+| `id` | The unique ID generated for each image upload. |
+| `filename` | ID + file extension. |
+| `mime_type` | Used for returning correct `Content-Type` header. |
+| `checksum` | SHA1 checksum of image file, after exif removal and auto rotation, used for finding duplicates. |
+| `size` | Size of uploaded image, allows for different expire rules for large files. |
+| `token` | Secure token generated for each image upload, needed for image deletion. |
+| `accessed` | Timestamp of when image was last viewed, used for finding images never accessed and stale images. |
+| `timestamp` | Data and time of image upload. |
 
 ## Nginx config
 ```
@@ -150,7 +146,7 @@ server {
 
         if ($request_uri ~ \.(?:ico|gif|jpe?g|png|webp|bmp)$) {
             add_header Cache-Control "public";
-            expires max;
+            expires 3M;
         }
     }
 }
