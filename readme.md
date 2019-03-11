@@ -31,8 +31,9 @@ Images can be resized by adding dimensions to the URL, e.g.: `/300x300/1u5c7w.jp
 ## Install
 TBD
 
-## CLI upload
-Example of upload CLI function:
+## Upload
+### Alias
+Put this in your `.bashrc` or `.zshrc`:
 ```
 uimg () {
     curl -s -F "file=@${1:--}" https://your.uimg.instance/upload | jq -r
@@ -62,6 +63,19 @@ If you try to upload an image already uploaded, the URL of that image will be re
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
+
+### Script
+Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger), using a script is also an option. Make sure to make it available in PATH, like `/usr/local/bin/`:
+```
+#!/bin/bash
+
+UIMG=`curl -s -F "file=@${1:--}" https://your.uimg.instance/upload`
+
+echo $UIMG | jq -r '.url' | xclip -i -sel clipboard
+echo $UIMG | jq -r
+```
+
+This will upload the image, and put the returned URL in the clipboard. This is useful because running the command from inside Ranger doesn't give the user time to view or copy the output. The script requires `jq` and `xclip`.
 
 ## Database
 Each image upload is stored in the database;
