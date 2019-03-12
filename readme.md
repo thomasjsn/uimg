@@ -173,4 +173,4 @@ server {
 
 ## License
 
-µIMG is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+µIMG is open-sourced software licensed under the [MIT license](LICENSE).
