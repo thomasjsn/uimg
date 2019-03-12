@@ -18,15 +18,39 @@ All images, uploaded and resized, are stored on a S3 backend, I use [Minio](http
 µIMG is meant to be placed behind a caching service, like a CDN, Cloudflare or a caching nginx web server.
 
 ## Requirements
-* nginx (untested on Apache)
-* PHP 7.x
-* MySQL
-* Composer
-* Imagick
+* nginx (not tested with Apache)
+* PHP >= 7.1.3 (with OpenSSL, PDO, and Mbstring)
+* MySQL, Postgres, SQLite, or SQL Server
+* [Composer](https://getcomposer.org/)
+* ImageMagick (php-imagick)
 * S3 compatible storage (like [Minio](https://github.com/minio/minio))
 
+µIMG is build with [Lumen](https://lumen.laravel.com/), so its requirements and documentation applies.
+
 ## Install
-TBD
+Clone the repository:
+```
+$ git clone https://github.com/thomasjsn/uimg.git
+```
+
+Install packages:
+```
+cd /your/uimg/path
+$ composer install
+```
+
+Set configuration options:
+```
+$ cp .env.example .env
+$ vim .env
+```
+
+Migrate the database:
+```
+$ php artisan migrate
+```
+
+Add and enable nginx site, see [nginx config](#nginx-config), then reload nginx.
 
 ## Upload
 ### Alias
@@ -43,7 +67,20 @@ Usage:
 cat my-image.jpg | uimg
 ```
 
-Response:
+### Script
+Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger), using a script is also an option. Make sure to make it available in PATH, like `/usr/local/bin/`:
+```
+#!/bin/bash
+
+UIMG=`curl -s -F "file=@${1:--}" https://your.uimg.instance/upload`
+
+echo $UIMG | jq -r '.url' | xclip -i -sel clipboard
+echo $UIMG | jq -r
+```
+
+This will upload the image, and put the returned URL in the clipboard. This is useful because running the command from inside Ranger doesn't give the user time to view or copy the output. The script requires `jq` and `xclip`.
+
+### Response
 ```
 {
   "status": "ok",
@@ -68,26 +105,13 @@ If you try to upload an image already uploaded, the URL of that image will be re
 
 Token is not returned when an image already exists, only the original uploader can delete an image.
 
-### Script
-Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger), using a script is also an option. Make sure to make it available in PATH, like `/usr/local/bin/`:
-```
-#!/bin/bash
-
-UIMG=`curl -s -F "file=@${1:--}" https://your.uimg.instance/upload`
-
-echo $UIMG | jq -r '.url' | xclip -i -sel clipboard
-echo $UIMG | jq -r
-```
-
-This will upload the image, and put the returned URL in the clipboard. This is useful because running the command from inside Ranger doesn't give the user time to view or copy the output. The script requires `jq` and `xclip`.
-
 ## Delete
 When uploading an image a token is returned with the response, this token can be used to delete the image. Curl example:
 ```
 curl -X "DELETE" "https://your.uimg.instance/ei10v8/7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6"
 ```
 
-Response:
+### Response
 ```
 {
   "status": "ok",
@@ -140,7 +164,7 @@ Each image upload is stored in the database;
 | `accessed` | Timestamp of when image was last viewed, used for finding images never accessed and stale images. |
 | `timestamp` | Data and time of image upload. |
 
-## Nginx config
+## nginx config
 ```
 server {
     listen 80;
