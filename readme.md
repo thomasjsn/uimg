@@ -5,11 +5,12 @@
 
 ## Features
 * CLI upload
-* On-the-fly image resizing
-* Auto-rotate and strip exif data on upload
+* On-the-fly image resizing by changing the URL
+* Auto-rotate and strip EXIF data on upload
 * Return URL for already existing images, instead of uploading
-* S3 compatible storage back-end
-* Purge uploaded but never accessed images
+* S3 compatible back-end storage
+* Automatic image clean-up
+* Delete uploaded image with token
 * No personal information is stored
 
 All images, uploaded and resized, are stored on a S3 backend, I use [Minio](https://github.com/minio/minio). There is currently no support for local file system storage, although implementing it would only require a simple configuration change of the [File Storage](https://laravel.com/docs/master/filesystem).
@@ -46,6 +47,7 @@ Response:
 ```
 {
   "status": "ok",
+  "operation": "create",
   "message": "Image successfully uploaded",
   "image_id": "1u5c7w",
   "token": "7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6",
@@ -57,10 +59,14 @@ If you try to upload an image already uploaded, the URL of that image will be re
 ```
 {
   "status": "ok",
+  "operation": "retrieve",
   "message": "Image already uploaded",
+  "image_id": "1u5c7w",
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
+
+Token is not returned when an image already exists, only the original uploader can delete an image.
 
 ### Script
 Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger), using a script is also an option. Make sure to make it available in PATH, like `/usr/local/bin/`:
@@ -81,7 +87,17 @@ When uploading an image a token is returned with the response, this token can be
 curl -X "DELETE" "https://your.uimg.instance/ei10v8/7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6"
 ```
 
-A 204 (empty response) code will be returned if delete was successful.
+Response:
+```
+{
+  "status": "ok",
+  "operation": "destroy",
+  "message": "Image was deleted",
+  "image_id": "ei10v8"
+}
+```
+
+Please note that if µIMG is behind a caching service, the image might still be cached on that service and thus still available even after deletion until the cache expires.
 
 ## Resize
 Images can be resized by adding dimensions to the URL, e.g.:
@@ -95,8 +111,11 @@ Running the cleanup command `artisan images:cleanup` will:
 
 * Delete images older than 1 week that have not been viewed
 * Delete images that have not been viewed in 1 year
+* Delete images over 10 MiB uploaded over 3 months ago
 
 Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `accessed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `accessed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
+
+Use command with option `--dry-run` to see what would happen, without actually doing anything.
 
 ### Scheduler
 To run the scheduler a cron job must be added;
@@ -115,7 +134,7 @@ Each image upload is stored in the database;
 | `id` | The unique ID generated for each image upload. |
 | `filename` | ID + file extension. |
 | `mime_type` | Used for returning correct `Content-Type` header. |
-| `checksum` | SHA1 checksum of image file, after exif removal and auto rotation, used for finding duplicates. |
+| `checksum` | SHA1 checksum of image file, after EXIF removal and auto rotation, used for finding duplicates. |
 | `size` | Size of uploaded image, allows for different expire rules for large files. |
 | `token` | Secure token generated for each image upload, needed for image deletion. |
 | `accessed` | Timestamp of when image was last viewed, used for finding images never accessed and stale images. |

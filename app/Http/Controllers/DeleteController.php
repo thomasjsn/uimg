@@ -24,7 +24,11 @@ class DeleteController extends Controller
         $image = DB::table('images')->where(['id' => $id, 'token' => $token])->first();
 
         if (is_null($image)) {
-            return response()->json(['status'=>'error','reason'=>'Image not found, or token incorrect'], 404);
+            return response()->json([
+                'status' => 'error',
+                'error' => 404,
+                'message' => 'Image not found, or token incorrect'
+            ], 404);
         }
 
         DB::table('images')->where(['id' => $id, 'token' => $token])->delete();
@@ -32,7 +36,12 @@ class DeleteController extends Controller
 
         \Log::info('Image deleted', ['img' => $image->filename]);
 
-        return response()->json([], 204);
+        return response()->json([
+            'status'=>'ok',
+            'operation' => 'destroy',
+            'message' => 'Image was deleted',
+            'image_id' => $image->id
+        ], 200);
     }
 
 }

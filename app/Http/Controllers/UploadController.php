@@ -50,7 +50,11 @@ class UploadController extends Controller
                 $img->destroy();
             break;
             default:
-                return response()->json(['status'=>'error','reason'=>'Not a valid image'], 400);
+                return response()->json([
+                    'status' => 'error',
+                    'error' => 400,
+                    'message' => 'Not a valid image'
+                ], 400);
         }
 
         $filename = $hash . '.' . $ext;
@@ -61,10 +65,14 @@ class UploadController extends Controller
             \Log::info('Image already uploaded', ['img' => $filename]);
             Storage::disk()->delete($hash);
 
+            $existingImage = DB::table('images')->where('checksum', $checksum)->first();
+
             return response()->json([
                 'status'=>'ok',
-                'message'=>'Image already uploaded',
-                'url' => env('APP_URL') . '/' . DB::table('images')->where('checksum', $checksum)->value('filename')
+                'operation' => 'retrieve',
+                'message' => 'Image already uploaded',
+                'image_id' => $existingImage->id,
+                'url' => env('APP_URL') . '/' . $existingImage->filename
             ], 200);
         }
 
@@ -86,6 +94,7 @@ class UploadController extends Controller
 
 		$response = [
             'status' => 'ok',
+            'operation' => 'create',
             'message' => 'Image successfully uploaded',
             'image_id' => $hash,
             'token' => $token,

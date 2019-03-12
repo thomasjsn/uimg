@@ -27,7 +27,12 @@ class HomeController extends Controller
         $size = $this->formatBytes($size);
 
         $last = DB::table('images')->orderBy('timestamp', 'desc')->first();
-        $last = Carbon::createFromTimeString($last->timestamp)->diffForHumans();
+
+        if (! is_null($last)) {
+            $last = Carbon::createFromTimeString($last->timestamp)->diffForHumans();
+        } else {
+            $last = '∞';
+        }
 
         return view('home', compact('images', 'size', 'last'));
     }

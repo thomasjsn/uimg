@@ -41,7 +41,11 @@ class DisplayController extends Controller
     public function resize($w, $h, $file, $ext)
     {
         if ($w > 2000 || $h > 2000 || $w < 10 || $h < 10) {
-            return response()->json(['status'=>'error','reason'=>'Width and height must be between 10 and 2000'], 400);
+            return response()->json([
+                'status' => 'error',
+                'error' => 400,
+                'message' => 'Width and height must be between 10 and 2000'
+            ], 400);
         }
 
         $filename = $file . '.' . $ext;

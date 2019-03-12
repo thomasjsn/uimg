@@ -71,7 +71,9 @@
                 </div>
 
 <pre>
-cat my-image.jpg | curl -s -F "file=@${1:--}" {{ env('APP_URL') }}/upload
+cat my-image.jpg | \
+curl -s -F "file=@${1:--}" \
+{{ env('APP_URL') }}/upload
 </pre>
 
                 <p>
