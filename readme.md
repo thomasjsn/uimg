@@ -173,6 +173,8 @@ To run the scheduler a cron job must be added;
 
 Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
 
+## Filesystem driver
+Set the `FILESYSTEM_CLOUD` variable in your `.env` file to the filesystem driver of your choice. You'll find available values in the `config/filesystems.php` file. Also make sure to add all environment variables needed for that driver to your `.env` file. The `.env.sample` is set up with the `minio` driver.
 
 ## Database
 Each image upload is stored in the database;

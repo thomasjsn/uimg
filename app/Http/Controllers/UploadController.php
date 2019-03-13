@@ -76,7 +76,7 @@ class UploadController extends Controller
             ], 200);
         }
 
-        Storage::disk('minio')->put($filename . '/' . $filename, $fileContent);
+        Storage::cloud()->put($filename . '/' . $filename, $fileContent);
 
         $token = bin2hex(random_bytes(32));
 

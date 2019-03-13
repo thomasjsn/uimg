@@ -24,9 +24,9 @@ class DisplayController extends Controller
     {
         $filename = $file . '.' . $ext;
 
-        if (! Storage::disk('minio')->exists($filename . '/' . $filename)) abort(404);
+        if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
 
-        $image = Storage::disk('minio')->get($filename . '/' . $filename);
+        $image = Storage::cloud()->get($filename . '/' . $filename);
             
         $type = DB::table('images')->where('id', $file)->value('mime_type');
 
@@ -51,7 +51,7 @@ class DisplayController extends Controller
         $filename = $file . '.' . $ext;
         $path = $w . 'x' . $h . '/' . $filename;
         
-        if (! Storage::disk('minio')->exists($filename . '/' . $filename)) abort(404);
+        if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
 
         $image = $this->scaleImage($w, $h, $filename, $path);
             
@@ -67,13 +67,13 @@ class DisplayController extends Controller
 
     private function scaleImage($w, $h, $filename, $path)
     {
-        if (Storage::disk('minio')->exists($filename . '/' . $path)) {
+        if (Storage::cloud()->exists($filename . '/' . $path)) {
             \Log::info('Found existing scaled image', ['img' => $filename, 'dim' => $w . 'x' . $h]);
 
-            return Storage::disk('minio')->get($filename . '/' . $path);
+            return Storage::cloud()->get($filename . '/' . $path);
         }
 
-        $org = Storage::disk('minio')->get($filename . '/' . $filename);
+        $org = Storage::cloud()->get($filename . '/' . $filename);
         Storage::disk()->put($filename, $org);
 
         $imagick = new \Imagick(realpath('../storage/app/' . $filename));
@@ -82,7 +82,7 @@ class DisplayController extends Controller
         $image = $imagick->getImagesBlob();
         $imagick->destroy();
 
-        Storage::disk('minio')->put($filename . '/' . $path, $image);
+        Storage::cloud()->put($filename . '/' . $path, $image);
         Storage::disk()->delete($filename);
 
         \Log::info('Image scaled', ['img' => $filename, 'dim' => $w . 'x' . $h]);

@@ -74,6 +74,16 @@ return [
             'bucket' => env('MINIO_BUCKET'),
         ],
 
+        'wasabi' => [
+            'driver' => 's3',
+            'endpoint' => env('WASABI_ENDPOINT', 'https://s3.wasabisys.com'),
+            'use_path_style_endpoint' => true,
+            'key' => env('WASABI_KEY'),
+            'secret' => env('WASABI_SECRET'),
+            'region' => env('WASABI_REGION', 'us-east-1'),
+            'bucket' => env('WASABI_BUCKET'),
+        ],
+
     ],
 
 ];

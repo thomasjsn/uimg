@@ -57,7 +57,7 @@ class ImagesCleanUp extends Command
 
         $images = DB::table('images')->get();
         foreach ($images as $image) {
-            if (! Storage::disk('minio')->exists($image->filename)) {
+            if (! Storage::cloud()->exists($image->filename)) {
                 $this->info('Image file missing: ' . $image->filename);
                 $this->purgeImage($image);
             }
@@ -72,7 +72,7 @@ class ImagesCleanUp extends Command
             return;
         }
 
-        Storage::disk('minio')->deleteDirectory($image->filename);
+        Storage::cloud()->deleteDirectory($image->filename);
         DB::table('images')->where('id', $image->id)->delete();
     }
 }

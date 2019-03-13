@@ -32,7 +32,7 @@ class DeleteController extends Controller
         }
 
         DB::table('images')->where(['id' => $id, 'token' => $token])->delete();
-        Storage::disk('minio')->deleteDirectory($image->filename);
+        Storage::cloud()->deleteDirectory($image->filename);
 
         \Log::info('Image deleted', ['img' => $image->filename]);
 
