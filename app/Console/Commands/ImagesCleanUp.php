@@ -54,6 +54,14 @@ class ImagesCleanUp extends Command
             $this->info('Large file expired: ' . $image->filename);
             $this->purgeImage($image);
         }
+
+        $images = DB::table('images')->get();
+        foreach ($images as $image) {
+            if (! Storage::disk('minio')->exists($image->filename)) {
+                $this->info('Image file missing: ' . $image->filename);
+                $this->purgeImage($image);
+            }
+        }
     }
 
 

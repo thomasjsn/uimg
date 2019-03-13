@@ -13,7 +13,7 @@
 * Delete uploaded image with token
 * No personal information is stored
 
-All images, uploaded and resized, are stored on a S3 backend, I use [Minio](https://github.com/minio/minio). There is currently no support for local file system storage, although implementing it would only require a simple configuration change of the [File Storage](https://laravel.com/docs/master/filesystem).
+All images, uploaded and resized, are stored on a S3 backend. There is currently no support for local file system storage, although implementing it would only require a simple configuration change of the [File Storage](https://laravel.com/docs/master/filesystem).
 
 µIMG is meant to be placed behind a caching service, like a CDN, Cloudflare or a caching nginx web server.
 
@@ -23,7 +23,7 @@ All images, uploaded and resized, are stored on a S3 backend, I use [Minio](http
 * MySQL, Postgres, SQLite, or SQL Server
 * [Composer](https://getcomposer.org/)
 * ImageMagick (php-imagick)
-* S3 compatible storage (like [Minio](https://github.com/minio/minio))
+* S3 compatible storage (like [Minio](https://github.com/minio/minio), or [Wasabi](https://wasabi.com/))
 
 µIMG is build with [Lumen](https://lumen.laravel.com/), so its requirements and documentation applies.
 
@@ -35,7 +35,7 @@ $ git clone https://github.com/thomasjsn/uimg.git
 
 Install packages:
 ```
-cd /your/uimg/path
+$ cd /your/uimg/path
 $ composer install
 ```
 
@@ -51,6 +51,14 @@ $ php artisan migrate
 ```
 
 Add and enable nginx site, see [nginx config](#nginx-config), then reload nginx.
+
+## Upgrade
+Simply pull the repository and install any updated packages:
+```
+$ cd /your/uimg/path
+$ git pull
+$ composer install
+```
 
 ## Upload
 ### Alias
@@ -130,12 +138,14 @@ Images can be resized by adding dimensions to the URL, e.g.:
 ```
 Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests.
 
-## Cleanup
+## Commands
+### Cleanup
 Running the cleanup command `artisan images:cleanup` will:
 
 * Delete images older than 1 week that have not been viewed
 * Delete images that have not been viewed in 1 year
 * Delete images over 10 MiB uploaded over 3 months ago
+* Delete database entries referencing missing image files
 
 Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `accessed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `accessed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
 
