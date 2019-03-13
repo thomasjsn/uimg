@@ -20,6 +20,10 @@ All images, uploaded and resized, are stored on a S3 backend, I use [Minio](http
 ## Requirements
 * nginx (not tested with Apache)
 * PHP >= 7.1.3 (with OpenSSL, PDO, and Mbstring)
+    * `php7.3-phm`
+    * `php7.3-xml`
+    * `php7.3-mbstring`
+    * `php7.3-mysql`
 * MySQL, Postgres, SQLite, or SQL Server
 * [Composer](https://getcomposer.org/)
 * ImageMagick (php-imagick)
@@ -39,7 +43,15 @@ cd /your/uimg/path
 $ composer install
 ```
 
-Set configuration options:
+Set up database:
+```
+$ sudo mysql
+
+MariaDB [(none)]> CREATE DATABASE uimg;
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON uimg.* To 'uimg'@'localhost' IDENTIFIED BY 't!3w5eYwns9X&sYI';
+```
+
+Set configuration options; make sure to set the key to a random string. Typically, this string should be 32 characters long.
 ```
 $ cp .env.example .env
 $ vim .env
@@ -50,7 +62,9 @@ Migrate the database:
 $ php artisan migrate
 ```
 
-Add and enable nginx site, see [nginx config](#nginx-config), then reload nginx.
+* Make sure `storage/` is writable by the webserver.
+* Edit your `php.ini` and change `upload_max_filesize` and `post_max_size` to a larger value.
+* Add and enable nginx site, see [nginx config](#nginx-config), then reload nginx.
 
 ## Upload
 ### Alias
@@ -185,7 +199,7 @@ server {
 
         fastcgi_index index.php;
         include fastcgi.conf;
-        fastcgi_pass unix:/run/php/php7.1-fpm.sock;
+        fastcgi_pass unix:/run/php/php7.3-fpm.sock;
 
         if ($request_uri ~ \.(?:ico|gif|jpe?g|png|webp|bmp)$) {
             add_header Cache-Control "public";
