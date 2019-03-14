@@ -30,9 +30,11 @@ class DisplayController extends Controller
         $type = DB::table('images')->where('id', $file)->value('mime_type');
         if (is_null($type)) abort(404);
 
-        DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);
+        DB::table('images')->where('id', $file)->update(['last_viewed' => Carbon::now()]);
 
-        return response($image, 200)->header('Content-Type', $type);
+        return response($image, 200)
+            ->header('Content-Type', $type)
+            ->header('Cache-Control', config('uimg.cache_header.image'));
     }
 
 
@@ -55,9 +57,11 @@ class DisplayController extends Controller
         $type = DB::table('images')->where('id', $file)->value('mime_type');
         if (is_null($type)) abort(404);
 
-        DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);
+        DB::table('images')->where('id', $file)->update(['last_viewed' => Carbon::now()]);
 
-        return response($image, 200)->header('Content-Type', $type);
+        return response($image, 200)
+            ->header('Content-Type', $type)
+            ->header('Cache-Control', config('uimg.cache_header.image'));
     }
 
 

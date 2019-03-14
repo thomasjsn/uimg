@@ -17,6 +17,7 @@ class CreateApiKeysTable extends Migration
             $table->bigIncrements('id');
             $table->string('api_key')->unique();
             $table->string('comment')->nullable();
+            $table->timestamp('last_seen')->nullable();
             $table->timestamp('created')->nullable();
         });
     }

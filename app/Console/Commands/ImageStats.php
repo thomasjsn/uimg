@@ -42,11 +42,14 @@ class ImageStats extends Command
                 'Images',
                 DB::table('images')->count()
             ],[
-                'Not accessed',
-                DB::table('images')->whereNull('accessed')->count()
+                'Unseen',
+                DB::table('images')->whereNull('last_viewed')->count()
             ],[
                 'Derivatives',
                 count(Storage::cloud()->allDirectories()) - DB::table('images')->count()
+            ],[
+                'Orphans',
+                DB::table('images')->whereNull('api_key_id')->count()
             ]
         ];
 

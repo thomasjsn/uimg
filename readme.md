@@ -176,7 +176,7 @@ Running the cleanup command `artisan images:cleanup` will:
 * Delete images that have not been viewed in 1 year
 * Delete database entries referencing missing image files
 
-Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `accessed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `accessed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
+Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `last_viewed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `last_viewed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
 
 Use command with option `--dry-run` to see what would happen, without actually doing anything.
 
@@ -213,12 +213,13 @@ server {
         fastcgi_index index.php;
         include fastcgi.conf;
         fastcgi_pass unix:/run/php/php7.3-fpm.sock;
-
-        if ($request_uri ~ \.(?:ico|gif|jpe?g|png|webp|bmp)$) {
-            add_header Cache-Control "public";
-            expires 3M;
-        }
     }
+
+    location ~ \.(?:ico|txt)$) {
+        add_header Cache-Control "public";
+        expires 3M;
+    }
+
 }
 ```
 

@@ -21,7 +21,7 @@ class CreateImagesTable extends Migration
             $table->bigInteger('size')->unsigned();
             $table->bigInteger('api_key_id')->nullable()->unsigned()->index();
             $table->foreign('api_key_id')->references('id')->on('api_keys')->onDelete('set null');
-            $table->timestamp('accessed')->nullable();
+            $table->timestamp('last_viewed')->nullable();
             $table->timestamp('created')->nullable();
         });
     }

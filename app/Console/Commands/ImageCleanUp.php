@@ -37,18 +37,18 @@ class ImageCleanUp extends Command
      */
     public function handle()
     {
-        $neverAccessed = DB::table('images')
-            ->whereNull('accessed')
+        $unseen = DB::table('images')
+            ->whereNull('last_viewed')
             ->whereRaw('created < NOW() - INTERVAL 90 DAY')
             ->get();
-        foreach ($neverAccessed as $image) {
-            $this->info('Never accessed: ' . $image->filename);
+        foreach ($unseen as $image) {
+            $this->info('Unseen: ' . $image->filename);
             $this->purgeImage($image);
         }
 
         $stale = DB::table('images')
-            ->whereNotNull('accessed')
-            ->whereRaw('accessed < NOW() - INTERVAL 1 YEAR')
+            ->whereNotNull('last_viewed')
+            ->whereRaw('last_viewed < NOW() - INTERVAL 1 YEAR')
             ->get();
         foreach ($stale as $image) {
             $this->info('Turned stale: ' . $image->filename);

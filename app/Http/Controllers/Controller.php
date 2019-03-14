@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
+use Carbon\Carbon;
 use DB;
 
 class Controller extends BaseController
@@ -22,6 +23,8 @@ class Controller extends BaseController
 
 
     protected function getKeyId($key) {
+        DB::table('api_keys')->where('api_key', $key)->update(['last_seen' => Carbon::now()]);
+
         return DB::table('api_keys')->where('api_key', $key)->value('id');
     }
 

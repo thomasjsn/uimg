@@ -40,10 +40,19 @@ class ApiKeyList extends Command
         $keys = DB::table('api_keys')->orderBy('id')->get();
 
         $keys = $keys->map(function ($key) {
-            return [$key->api_key, $key->comment];
+            $lastSeen = 'Never';
+            if (! is_null($key->last_seen)) {
+                $lastSeen = Carbon::createFromTimeString($key->last_seen)->diffForHumans();
+            }
+
+            return [
+                $key->api_key,
+                $lastSeen,
+                $key->comment
+            ];
         });
 
-        $this->table(['API key', 'Comment'], $keys);
+        $this->table(['API key', 'Last seen', 'Comment'], $keys);
     }
 
 }
