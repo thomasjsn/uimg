@@ -26,10 +26,10 @@ class HomeController extends Controller
         $size = DB::table('images')->sum('size');
         $size = $this->formatBytes($size);
 
-        $last = DB::table('images')->orderBy('timestamp', 'desc')->first();
+        $last = DB::table('images')->orderBy('created', 'desc')->first();
 
         if (! is_null($last)) {
-            $last = Carbon::createFromTimeString($last->timestamp)->diffForHumans();
+            $last = Carbon::createFromTimeString($last->created)->diffForHumans();
         } else {
             $last = '∞';
         }

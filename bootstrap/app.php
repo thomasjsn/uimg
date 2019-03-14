@@ -106,4 +106,5 @@ $app->router->group([
 });
 
 $app->configure('filesystems');
+$app->configure('uimg');
 return $app;

@@ -10,8 +10,7 @@
 * Return URL for already existing images, instead of uploading
 * S3 compatible back-end storage
 * Automatic image clean-up
-* Delete uploaded image with token
-* No personal information is stored
+* Issue and manage API keys for upload and delete
 
 All images, uploaded and resized, are stored on a S3 backend. There is currently no support for local file system storage, although implementing it would only require a simple configuration change of the [File Storage](https://laravel.com/docs/master/filesystem).
 
@@ -74,12 +73,30 @@ $ git pull
 $ composer install
 ```
 
+## API keys
+Issue new key:
+```
+$ ./artisan apikey:add (--comment="")
+```
+
+List all keys:
+```
+$ ./artisan apikey:list
+```
+
+Remove key:
+```
+$ ./artisan apikey:remove api-key
+```
+
 ## Upload
+The `key` value must match a valid API key the upload to be accepted.
+
 ### Alias
 Put this in your `.bashrc` or `.zshrc`:
 ```
 uimg () {
-    curl -s -F "file=@${1:--}" https://your.uimg.instance/upload | jq -r
+    curl -s -F "file=@${1:--}" -F "key=api-key" https://your.uimg.instance/upload | jq -r
 }
 ```
 Package `jq` required for json decoding.
@@ -94,7 +111,7 @@ Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger)
 ```
 #!/bin/bash
 
-UIMG=`curl -s -F "file=@${1:--}" https://your.uimg.instance/upload`
+UIMG=`curl -s -F "file=@${1:--}" -F "key=api-key" https://your.uimg.instance/upload`
 
 echo $UIMG | jq -r '.url' | xclip -i -sel clipboard
 echo $UIMG | jq -r
@@ -109,7 +126,7 @@ This will upload the image, and put the returned URL in the clipboard. This is u
   "operation": "create",
   "message": "Image successfully uploaded",
   "image_id": "1u5c7w",
-  "token": "7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6",
+  "size_mib": 2.724,
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
@@ -125,12 +142,10 @@ If you try to upload an image already uploaded, the URL of that image will be re
 }
 ```
 
-Token is not returned when an image already exists, only the original uploader can delete an image.
-
 ## Delete
-When uploading an image a token is returned with the response, this token can be used to delete the image. Curl example:
+The `key` value must match the API key that uploaded the image for the delete request to be accepted.
 ```
-curl -X "DELETE" "https://your.uimg.instance/ei10v8/7c6a636f2bb0694a33bca7c79c715e63075d66d76acfea5eccb35febb6355ad6"
+curl -X "DELETE" "https://your.uimg.instance/ei10v8.jpg?key=api-key"
 ```
 
 ### Response
@@ -156,9 +171,8 @@ Image ratio will not change. The resized image is stored on the S3 back-end and 
 ### Cleanup
 Running the cleanup command `artisan images:cleanup` will:
 
-* Delete images older than 1 week that have not been viewed
+* Delete images older than 90 days that have not been viewed
 * Delete images that have not been viewed in 1 year
-* Delete images over 10 MiB uploaded over 3 months ago
 * Delete database entries referencing missing image files
 
 Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `accessed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `accessed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
@@ -175,20 +189,6 @@ Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
 
 ## Filesystem driver
 Set the `FILESYSTEM_CLOUD` variable in your `.env` file to the filesystem driver of your choice. You'll find available values in the `config/filesystems.php` file. Also make sure to add all environment variables needed for that driver to your `.env` file. The `.env.sample` is set up with the `minio` driver.
-
-## Database
-Each image upload is stored in the database;
-
-| Field | Usage |
-| ----- | ----- |
-| `id` | The unique ID generated for each image upload. |
-| `filename` | ID + file extension. |
-| `mime_type` | Used for returning correct `Content-Type` header. |
-| `checksum` | SHA1 checksum of image file, after EXIF removal and auto rotation, used for finding duplicates. |
-| `size` | Size of uploaded image, allows for different expire rules for large files. |
-| `token` | Secure token generated for each image upload, needed for image deletion. |
-| `accessed` | Timestamp of when image was last viewed, used for finding images never accessed and stale images. |
-| `timestamp` | Data and time of image upload. |
 
 ## nginx config
 ```

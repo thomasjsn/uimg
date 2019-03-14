@@ -19,19 +19,24 @@ class DeleteController extends Controller
     }
 
 
-    public function destroy($id, $token)
+    public function destroy($file, $ext, Request $request)
     {
-        $image = DB::table('images')->where(['id' => $id, 'token' => $token])->first();
+        $key = $request->input('key');
+        $keyId = $this->getKeyId($key);
 
-        if (is_null($image)) {
+        $filename = $file . '.' . $ext;
+        $image = DB::table('images')->where(['id' => $file, 'filename' => $filename])->first();
+        if (is_null($image)) abort(404);
+
+        if (is_null($keyId) || $keyId != $image->api_key_id) {
             return response()->json([
                 'status' => 'error',
-                'error' => 404,
-                'message' => 'Image not found, or token incorrect'
-            ], 404);
+                'error' => 403,
+                'message' => 'Incorrect or missing key'
+            ], 403);
         }
 
-        DB::table('images')->where(['id' => $id, 'token' => $token])->delete();
+        DB::table('images')->where(['id' => $file, 'filename' => $filename])->delete();
         Storage::cloud()->deleteDirectory($image->filename);
 
         \Log::info('Image deleted', ['img' => $image->filename]);

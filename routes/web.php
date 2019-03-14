@@ -24,4 +24,4 @@ $router->get('/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DisplayController@sh
 $router->get('/{w:[0-9]+}x{h:[0-9]+}/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DisplayController@resize' ]);
 
 # Delete
-$router->delete('/{id:[0-9a-z]+}/{token:[0-9a-z]+}', [ 'uses' => 'DeleteController@destroy' ]);
+$router->delete('/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DeleteController@destroy' ]);

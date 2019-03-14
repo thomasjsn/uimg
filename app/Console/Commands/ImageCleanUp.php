@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use DB;
 use Storage;
 
-class ImagesCleanUp extends Command
+class ImageCleanUp extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'images:cleanup {--dry-run}';
+    protected $signature = 'image:cleanup {--dry-run}';
 
     /**
      * The console command description.
@@ -37,25 +37,26 @@ class ImagesCleanUp extends Command
      */
     public function handle()
     {
-        $neverAccessed = DB::table('images')->whereNull('accessed')->whereRaw('timestamp < NOW() - INTERVAL 1 WEEK')->get();
+        $neverAccessed = DB::table('images')
+            ->whereNull('accessed')
+            ->whereRaw('created < NOW() - INTERVAL 90 DAY')
+            ->get();
         foreach ($neverAccessed as $image) {
             $this->info('Never accessed: ' . $image->filename);
             $this->purgeImage($image);
         }
 
-        $stale = DB::table('images')->whereNotNull('accessed')->whereRaw('accessed < NOW() - INTERVAL 1 YEAR')->get();
+        $stale = DB::table('images')
+            ->whereNotNull('accessed')
+            ->whereRaw('accessed < NOW() - INTERVAL 1 YEAR')
+            ->get();
         foreach ($stale as $image) {
             $this->info('Turned stale: ' . $image->filename);
             $this->purgeImage($image);
         }
 
-        $large = DB::table('images')->where('size', '>', 1024*1024*10)->whereRaw('timestamp < NOW() - INTERVAL 3 MONTH')->get();
-        foreach ($large as $image) {
-            $this->info('Large file expired: ' . $image->filename);
-            $this->purgeImage($image);
-        }
-
-        $images = DB::table('images')->get();
+        $images = DB::table('images')
+            ->get();
         foreach ($images as $image) {
             if (! Storage::cloud()->exists($image->filename)) {
                 $this->info('Image file missing: ' . $image->filename);

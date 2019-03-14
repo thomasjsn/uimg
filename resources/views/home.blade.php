@@ -61,10 +61,6 @@
             .m-b-md {
                 margin-bottom: 30px;
             }
-
-            pre {
-                white-space: pre-wrap;
-            }
         </style>
     </head>
     <body>
@@ -73,10 +69,6 @@
                 <div class="title m-b-md">
                     µIMG
                 </div>
-
-<pre>
-cat my-image.jpg | curl -s -F "file=@${1:--}" {{ env('APP_URL') }}/upload
-</pre>
 
                 <p>
                 {{ $images }} {{ str_plural('image', $images) }} — {{ $size }} — last upload {{ $last }}

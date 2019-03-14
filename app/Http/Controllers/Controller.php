@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
+use DB;
 
 class Controller extends BaseController
 {
 
-    public function formatBytes($bytes, $precision = 2) {
+    protected function formatBytes($bytes, $precision = 2) {
         $units = array('B', 'KiB', 'MiB', 'GiB', 'TiB');
 
         $bytes = max($bytes, 0);
@@ -17,6 +18,11 @@ class Controller extends BaseController
         $bytes /= pow(1024, $pow);
 
         return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+
+    protected function getKeyId($key) {
+        return DB::table('api_keys')->where('api_key', $key)->value('id');
     }
 
 }

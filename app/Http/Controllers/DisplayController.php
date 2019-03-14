@@ -25,11 +25,9 @@ class DisplayController extends Controller
         $filename = $file . '.' . $ext;
 
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
-
         $image = Storage::cloud()->get($filename . '/' . $filename);
             
         $type = DB::table('images')->where('id', $file)->value('mime_type');
-
         if (is_null($type)) abort(404);
 
         DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);
@@ -52,11 +50,9 @@ class DisplayController extends Controller
         $path = $w . 'x' . $h . '/' . $filename;
         
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
-
         $image = $this->scaleImage($w, $h, $filename, $path);
             
         $type = DB::table('images')->where('id', $file)->value('mime_type');
-
         if (is_null($type)) abort(404);
 
         DB::table('images')->where('id', $file)->update(['accessed' => Carbon::now()]);

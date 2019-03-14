@@ -23,9 +23,20 @@ class UploadController extends Controller
     public function create(Request $request)
     {
         $file = $request->file('file');
+        $key = $request->input('key');
+        $keyId = $this->getKeyId($key);
+
         $fileContent = file_get_contents($file);
         $size = $file->getClientSize();
         $hash = $this->getNewHash();
+
+        if (is_null($keyId)) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 403,
+                'message' => 'Incorrect or missing key'
+            ], 403);
+        }
 
         Storage::disk()->put($hash, $fileContent);
 
@@ -78,16 +89,14 @@ class UploadController extends Controller
 
         Storage::cloud()->put($filename . '/' . $filename, $fileContent);
 
-        $token = bin2hex(random_bytes(32));
-
         DB::table('images')->insert([
             'id' => $hash,
             'filename' => $filename,
             'mime_type' => mime_content_type(realpath('../storage/app/' . $hash)),
             'checksum' => $checksum,
             'size' => $size,
-            'token' => $token,
-            'timestamp' => Carbon::now()
+            'api_key_id' => $keyId,
+            'created' => Carbon::now()
         ]);
 
         Storage::disk()->delete($hash);
@@ -97,8 +106,8 @@ class UploadController extends Controller
             'operation' => 'create',
             'message' => 'Image successfully uploaded',
             'image_id' => $hash,
-            'token' => $token,
-			'url' => $url
+            'size_mib' => round($size / 1024 / 1024, 3),
+            'url' => $url,
         ];
 
         \Log::info('Image successfully uploaded', ['img' => $filename]);

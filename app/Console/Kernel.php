@@ -13,7 +13,10 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        Commands\ImagesCleanUp::class
+        Commands\ApiKeyAdd::class,
+        Commands\ApiKeyList::class,
+        Commands\ApiKeyRemove::class,
+        Commands\ImageCleanUp::class
     ];
 
     /**
@@ -24,6 +27,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('images:cleanup')->daily();
+        $schedule->command('image:cleanup')->daily();
     }
 }
