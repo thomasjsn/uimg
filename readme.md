@@ -111,7 +111,8 @@ Since aliases isn't available in e.g. [Ranger](https://github.com/ranger/ranger)
 ```
 #!/bin/bash
 
-UIMG=`curl -s -F "file=@${1:--}" -F "key=api-key" https://your.uimg.instance/upload`
+KEY=api-key
+UIMG=`curl -s -F "file=@${1:--}" -F "key=$KEY" https://your.uimg.instance/upload`
 
 echo $UIMG | jq -r '.url' | xclip -i -sel clipboard
 echo $UIMG | jq -r

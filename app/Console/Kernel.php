@@ -16,7 +16,8 @@ class Kernel extends ConsoleKernel
         Commands\ApiKeyAdd::class,
         Commands\ApiKeyList::class,
         Commands\ApiKeyRemove::class,
-        Commands\ImageCleanUp::class
+        Commands\ImageCleanUp::class,
+        Commands\ImageStats::class
     ];
 
     /**
