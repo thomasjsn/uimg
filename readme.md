@@ -215,7 +215,7 @@ server {
         fastcgi_pass unix:/run/php/php7.3-fpm.sock;
     }
 
-    location ~ \.(?:ico|txt)$) {
+    location ~ \.(?:ico|txt)$ {
         add_header Cache-Control "public";
         expires 3M;
     }
