@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Carbon\Carbon;
 use DB;
 use Storage;
 
@@ -13,7 +14,7 @@ class ImageCleanUp extends Command
      *
      * @var string
      */
-    protected $signature = 'image:cleanup {--dry-run}';
+    protected $signature = 'image:cleanup {--dry-run : Don\'t do anything} {--derivatives : Purge old derivatives}';
 
     /**
      * The console command description.
@@ -63,6 +64,10 @@ class ImageCleanUp extends Command
                 $this->purgeImage($image);
             }
         }
+
+        if ($this->option('derivatives')) {
+            $this->clearStaleDerivatives();
+        };
     }
 
 
@@ -75,6 +80,30 @@ class ImageCleanUp extends Command
 
         Storage::cloud()->deleteDirectory($image->filename);
         DB::table('images')->where('id', $image->id)->delete();
+    }
+
+
+    private function clearStaleDerivatives()
+    {
+        $images = DB::table('images')->get();
+
+        foreach ($images as $image) {
+            $derivatives = Storage::cloud()->directories($image->filename);
+
+            foreach ($derivatives as $derivative) {
+                $lastMod = Storage::cloud()->lastModified($derivative . '/' . $image->filename);
+
+                $dt = Carbon::createFromTimestamp($lastMod);
+                $age = Carbon::now()->diffInDays($dt);
+
+                $this->line(sprintf('%s : %s', $derivative, $dt->diffForHumans()));
+
+                if ($age > 90) {
+                    $this->info(sprintf('%s : Deleted, age: %d', $derivative, $age));
+                    $lastMod = Storage::cloud()->deleteDirectory($derivative);
+                }
+            }
+        }
     }
 }
 

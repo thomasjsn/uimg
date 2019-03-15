@@ -52,7 +52,7 @@ class DisplayController extends Controller
         $path = $w . 'x' . $h . '/' . $filename;
         
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
-        $image = $this->scaleImage($w, $h, $filename, $path);
+        list($image, $proc) = $this->scaleImage($w, $h, $filename, $path);
             
         $type = DB::table('images')->where('id', $file)->value('mime_type');
         if (is_null($type)) abort(404);
@@ -61,7 +61,8 @@ class DisplayController extends Controller
 
         return response($image, 200)
             ->header('Content-Type', $type)
-            ->header('Cache-Control', config('uimg.cache_header.image'));
+            ->header('Cache-Control', config('uimg.cache_header.image'))
+            ->header('X-Image-Derivative', $proc);
     }
 
 
@@ -69,8 +70,9 @@ class DisplayController extends Controller
     {
         if (Storage::cloud()->exists($filename . '/' . $path)) {
             \Log::info('Found existing scaled image', ['img' => $filename, 'dim' => $w . 'x' . $h]);
+            $image = Storage::cloud()->get($filename . '/' . $path);
 
-            return Storage::cloud()->get($filename . '/' . $path);
+            return [$image, 'found'];
         }
 
         $org = Storage::cloud()->get($filename . '/' . $filename);
@@ -87,7 +89,7 @@ class DisplayController extends Controller
 
         \Log::info('Image scaled', ['img' => $filename, 'dim' => $w . 'x' . $h]);
 
-        return $image;
+        return [$image, 'created'];
     }
 
 }

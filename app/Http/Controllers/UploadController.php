@@ -70,7 +70,7 @@ class UploadController extends Controller
 
         $filename = $hash . '.' . $ext;
         $checksum = sha1_file($file);
-        $url = env('APP_URL') . '/' . $filename;
+        $url = config('uimg.url') . '/' . $filename;
 
         if (DB::table('images')->where('checksum', $checksum)->count() > 0) {
             \Log::info('Image already uploaded', ['img' => $filename]);
@@ -83,7 +83,7 @@ class UploadController extends Controller
                 'operation' => 'retrieve',
                 'message' => 'Image already uploaded',
                 'image_id' => $existingImage->id,
-                'url' => env('APP_URL') . '/' . $existingImage->filename
+                'url' => config('uimg.url') . '/' . $existingImage->filename
             ], 200);
         }
 

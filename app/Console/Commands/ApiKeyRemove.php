@@ -13,7 +13,7 @@ class ApiKeyRemove extends Command
      *
      * @var string
      */
-    protected $signature = 'apikey:remove {api_key}';
+    protected $signature = 'apikey:remove {api_key : API key to remove}';
 
     /**
      * The console command description.

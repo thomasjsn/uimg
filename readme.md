@@ -166,7 +166,7 @@ Images can be resized by adding dimensions to the URL, e.g.:
 ```
 /300x300/1u5c7w.jpg
 ```
-Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests.
+Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests. A `X-Image-Derivative` header is added which will show if the image was found on the back-end storage, or created.
 
 ## Commands
 ### Cleanup
@@ -175,10 +175,9 @@ Running the cleanup command `artisan images:cleanup` will:
 * Delete images older than 90 days that have not been viewed
 * Delete images that have not been viewed in 1 year
 * Delete database entries referencing missing image files
+* Delete image derivatives older than 90 days
 
 Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `last_viewed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `last_viewed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
-
-Use command with option `--dry-run` to see what would happen, without actually doing anything.
 
 ### Scheduler
 To run the scheduler a cron job must be added;

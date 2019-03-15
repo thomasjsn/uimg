@@ -13,7 +13,7 @@ class ApiKeyAdd extends Command
      *
      * @var string
      */
-    protected $signature = 'apikey:add {{--comment=}}';
+    protected $signature = 'apikey:add {{--comment= : Add comment to key}}';
 
     /**
      * The console command description.

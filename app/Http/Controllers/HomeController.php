@@ -26,7 +26,9 @@ class HomeController extends Controller
         $size = DB::table('images')->sum('size');
         $size = $this->formatBytes($size);
 
-        return response(view('home', compact('images', 'size')))
+        $text = config('uimg.home_text');
+
+        return response(view('home', compact('images', 'size', 'text')))
             ->header('Cache-Control', config('uimg.cache_header.home'));
     }
 
