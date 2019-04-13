@@ -15,7 +15,7 @@ class Controller extends BaseController
 		while(1)
 		{
             $hash = $this->generateString($permitted_chars, $length);
-            if (is_null(Redis::get($hash))) return $hash;
+            if (is_null(Redis::get('image:' . $hash))) return $hash;
 			$length++;
 		}
 	}

@@ -26,12 +26,12 @@ class DisplayController extends Controller
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
         $image = Storage::cloud()->get($filename . '/' . $filename);
 
-        $imageData = Redis::get($file);
+        $imageData = Redis::get('image:' . $file);
         if (is_null($imageData)) abort(404);
 
         $type = json_decode($imageData)->mime_type;
 
-        Redis::expire($file, 3600*24*365);
+        Redis::expire('image:' . $file, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)
@@ -55,12 +55,12 @@ class DisplayController extends Controller
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
         list($image, $proc) = $this->scaleImage($w, $h, $filename, $path);
             
-        $imageData = Redis::get($file);
+        $imageData = Redis::get('image:' . $file);
         if (is_null($imageData)) abort(404);
 
         $type = json_decode($imageData)->mime_type;
 
-        Redis::expire($file, 3600*24*365);
+        Redis::expire('image:' . $file, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)

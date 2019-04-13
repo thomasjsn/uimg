@@ -71,8 +71,8 @@ class UploadController extends Controller
         $checksum = sha1_file($file);
         $url = config('app.url') . '/' . $filename;
 
-        $existingImageHash = Redis::connection('checksum')->get($checksum);
-        $existingImageData = Redis::get($existingImageHash);
+        $existingImageHash = Redis::get('checksum:' . $checksum);
+        $existingImageData = Redis::get('image:' . $existingImageHash);
 
         if (! is_null($existingImageHash) && ! is_null($existingImageData)) {
             \Log::info('Image already uploaded', ['img' => $filename]);
@@ -88,19 +88,18 @@ class UploadController extends Controller
 
         Storage::cloud()->put($filename . '/' . $filename, $fileContent);
 
-        Redis::set($hash, json_encode([
+        Redis::set('image:' . $hash, json_encode([
             'filename' => $filename,
             'mime_type' => mime_content_type(realpath('../storage/app/' . $hash)),
         ]));
 
-        Redis::expire($hash, 3600*24*7);
-        Redis::connection('checksum')->set($checksum, $hash);
+        Redis::expire('image:' . $hash, 3600*24*7);
+        Redis::set('checksum:' . $checksum, $hash);
 
         Storage::disk()->delete($hash);
 
 		$response = [
             'status' => 'ok',
-            'operation' => 'create',
             'message' => 'Image successfully uploaded',
             'image_id' => $hash,
             'size_mib' => round($size / 1024 / 1024, 3),

@@ -39,9 +39,8 @@ class ImageCleanUp extends Command
      */
     public function handle()
     {
-
-        $keys = Redis::keys('*');
-        foreach ($keys as $key) {
+        $keys = Redis::scan('0', 'MATCH', 'image:*');
+        foreach ($keys[1] as $key) {
             $filename = json_decode(Redis::get($key))->filename;
 
             if (! Storage::cloud()->exists($filename)) {
@@ -53,10 +52,10 @@ class ImageCleanUp extends Command
         $directories = Storage::cloud()->directories();
         foreach ($directories as $directory) {
             $hash = strstr($directory, '.', true);
-            $image = Redis::get($hash);
+            $image = Redis::get('image:' . $hash);
 
             if (is_null($image)) {
-                $this->info('DB key missing: ' . $filename);
+                $this->info('DB key missing: ' . $directory);
                 $this->purgeImage($hash, $directory);
             }
         }
@@ -75,15 +74,15 @@ class ImageCleanUp extends Command
         }
 
         Storage::cloud()->deleteDirectory($filename);
-        Redis::del($hash);
+        Redis::del('image:' . $hash);
     }
 
 
     private function clearStaleDerivatives()
     {
-        $keys = Redis::keys('*');
+        $keys = Redis::scan('0', 'MATCH', 'image:*');
 
-        foreach ($keys as $key) {
+        foreach ($keys[1] as $key) {
             $filename = json_decode(Redis::get($key))->filename;
             $derivatives = Storage::cloud()->directories($filename);
 
