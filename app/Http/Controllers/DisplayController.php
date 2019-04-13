@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\Redis;
 use Storage;
 
 class DisplayController extends Controller
@@ -26,15 +25,17 @@ class DisplayController extends Controller
 
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
         $image = Storage::cloud()->get($filename . '/' . $filename);
-            
-        $type = DB::table('images')->where('id', $file)->value('mime_type');
-        if (is_null($type)) abort(404);
 
-        DB::table('images')->where('id', $file)->update(['last_viewed' => Carbon::now()]);
+        $imageData = Redis::get($file);
+        if (is_null($imageData)) abort(404);
+
+        $type = json_decode($imageData)->mime_type;
+
+        Redis::expire($file, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)
-            ->header('Cache-Control', config('uimg.cache_header.image'));
+            ->header('Cache-Control', 'public, max-age=' . 60*60*24*90);
     }
 
 
@@ -54,14 +55,16 @@ class DisplayController extends Controller
         if (! Storage::cloud()->exists($filename . '/' . $filename)) abort(404);
         list($image, $proc) = $this->scaleImage($w, $h, $filename, $path);
             
-        $type = DB::table('images')->where('id', $file)->value('mime_type');
-        if (is_null($type)) abort(404);
+        $imageData = Redis::get($file);
+        if (is_null($imageData)) abort(404);
 
-        DB::table('images')->where('id', $file)->update(['last_viewed' => Carbon::now()]);
+        $type = json_decode($imageData)->mime_type;
+
+        Redis::expire($file, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)
-            ->header('Cache-Control', config('uimg.cache_header.image'))
+            ->header('Cache-Control', 'public, max-age=' . 60*60*24*90)
             ->header('X-Image-Derivative', $proc);
     }
 

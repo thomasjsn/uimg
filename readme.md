@@ -10,7 +10,6 @@
 * Return URL for already existing images, instead of uploading
 * S3 compatible back-end storage
 * Automatic image clean-up
-* Issue and manage API keys for upload and delete
 
 All images, uploaded and resized, are stored on a S3 backend. There is currently no support for local file system storage, although implementing it would only require a simple configuration change of the [File Storage](https://laravel.com/docs/master/filesystem).
 
@@ -23,7 +22,7 @@ All images, uploaded and resized, are stored on a S3 backend. There is currently
     * `php7.3-xml`
     * `php7.3-mbstring`
     * `php7.3-mysql`
-* MySQL, Postgres, SQLite, or SQL Server
+* Redis server
 * [Composer](https://getcomposer.org/)
 * ImageMagick (php-imagick)
 * S3 compatible storage (like [Minio](https://github.com/minio/minio), or [Wasabi](https://wasabi.com/))
@@ -42,23 +41,10 @@ $ cd /your/uimg/path
 $ composer install
 ```
 
-Set up database:
-```
-$ sudo mysql
-
-MariaDB [(none)]> CREATE DATABASE uimg;
-MariaDB [(none)]> GRANT ALL PRIVILEGES ON uimg.* To 'uimg'@'localhost' IDENTIFIED BY 't!3w5eYwns9X&sYI';
-```
-
 Set configuration options; make sure to set the key to a random string. Typically, this string should be 32 characters long.
 ```
 $ cp .env.example .env
 $ vim .env
-```
-
-Migrate the database:
-```
-$ php artisan migrate
 ```
 
 * Make sure `storage/` is writable by the webserver.
@@ -73,21 +59,8 @@ $ git pull
 $ composer install
 ```
 
-## API keys
-Issue new key:
-```
-$ ./artisan apikey:add (--comment="")
-```
-
-List all keys:
-```
-$ ./artisan apikey:list
-```
-
-Remove key:
-```
-$ ./artisan apikey:remove api-key
-```
+## Upload key
+Set the `UPLOAD_KEY` variable in `.env` to limit image uploading.
 
 ## Upload
 The `key` value must match a valid API key the upload to be accepted.
@@ -124,7 +97,6 @@ This will upload the image, and put the returned URL in the clipboard. This is u
 ```
 {
   "status": "ok",
-  "operation": "create",
   "message": "Image successfully uploaded",
   "image_id": "1u5c7w",
   "size_mib": 2.724,
@@ -136,30 +108,11 @@ If you try to upload an image already uploaded, the URL of that image will be re
 ```
 {
   "status": "ok",
-  "operation": "retrieve",
   "message": "Image already uploaded",
   "image_id": "1u5c7w",
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
-
-## Delete
-The `key` value must match the API key that uploaded the image for the delete request to be accepted.
-```
-curl -X "DELETE" "https://your.uimg.instance/ei10v8.jpg?key=api-key"
-```
-
-### Response
-```
-{
-  "status": "ok",
-  "operation": "destroy",
-  "message": "Image was deleted",
-  "image_id": "ei10v8"
-}
-```
-
-Please note that if µIMG is behind a caching service, the image might still be cached on that service and thus still available even after deletion until the cache expires.
 
 ## Resize
 Images can be resized by adding dimensions to the URL, e.g.:
@@ -168,16 +121,17 @@ Images can be resized by adding dimensions to the URL, e.g.:
 ```
 Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests. A `X-Image-Derivative` header is added which will show if the image was found on the back-end storage, or created.
 
+## Expiration
+Images are set to expire after 7 days when uploaded, this is set to 1 year each time an image is requested. This will make sure unused images are cleaned up, while actively used images are not.
+
+
 ## Commands
 ### Cleanup
 Running the cleanup command `artisan images:cleanup` will:
 
-* Delete images older than 90 days that have not been viewed
-* Delete images that have not been viewed in 1 year
 * Delete database entries referencing missing image files
+* Delete images with no database entries
 * Delete image derivatives older than 90 days
-
-Note that if a caching service is placed in front of µIMG, most requests will not pass through. So the `last_viewed` field in the database does not correctly reflect when the image was last viewed. It's important that any caching headers have a shorter `maxage` than 1 year, e.g. 3 months; in which case the `last_viewed` field might only get updated when the cache is revalidated every 3 months. But that still gives a correct indication of which images have been stale for a whole year.
 
 ### Scheduler
 To run the scheduler a cron job must be added;

@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\Redis;
 
 class HomeController extends Controller
 {
@@ -21,15 +20,12 @@ class HomeController extends Controller
 
     public function show()
     {
-        $images = DB::table('images')->count();
-
-        $size = DB::table('images')->sum('size');
-        $size = $this->formatBytes($size);
+        $images = Redis::dbsize();
 
         $text = config('uimg.home_text');
 
-        return response(view('home', compact('images', 'size', 'text')))
-            ->header('Cache-Control', config('uimg.cache_header.home'));
+        return response(view('home', compact('images', 'text')))
+            ->header('Cache-Control', 'public, max-age=' . 60*30);
     }
 
 }

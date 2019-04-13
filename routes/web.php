@@ -22,6 +22,3 @@ $router->get('/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DisplayController@sh
 
 # Resize
 $router->get('/{w:[0-9]+}x{h:[0-9]+}/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DisplayController@resize' ]);
-
-# Delete
-$router->delete('/{file:[0-9a-z]+}.{ext:[a-z]+}', [ 'uses' => 'DeleteController@destroy' ]);

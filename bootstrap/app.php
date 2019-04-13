@@ -87,6 +87,7 @@ $app->singleton('filesystem', function ($app) {
 // $app->register(App\Providers\AppServiceProvider::class);
 // $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
+$app->register(Illuminate\Redis\RedisServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +106,7 @@ $app->router->group([
     require __DIR__.'/../routes/web.php';
 });
 
+$app->configure('app');
+$app->configure('database');
 $app->configure('filesystems');
-$app->configure('uimg');
 return $app;

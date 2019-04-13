@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Redis;
 use Carbon\Carbon;
 use DB;
 use Storage;
@@ -38,30 +39,25 @@ class ImageCleanUp extends Command
      */
     public function handle()
     {
-        $unseen = DB::table('images')
-            ->whereNull('last_viewed')
-            ->whereRaw('created < NOW() - INTERVAL 90 DAY')
-            ->get();
-        foreach ($unseen as $image) {
-            $this->info('Unseen: ' . $image->filename);
-            $this->purgeImage($image);
+
+        $keys = Redis::keys('*');
+        foreach ($keys as $key) {
+            $filename = json_decode(Redis::get($key))->filename;
+
+            if (! Storage::cloud()->exists($filename)) {
+                $this->info('Image file missing: ' . $filename);
+                $this->purgeImage($key, $filename);
+            }
         }
 
-        $stale = DB::table('images')
-            ->whereNotNull('last_viewed')
-            ->whereRaw('last_viewed < NOW() - INTERVAL 1 YEAR')
-            ->get();
-        foreach ($stale as $image) {
-            $this->info('Turned stale: ' . $image->filename);
-            $this->purgeImage($image);
-        }
+        $directories = Storage::cloud()->directories();
+        foreach ($directories as $directory) {
+            $hash = strstr($directory, '.', true);
+            $image = Redis::get($hash);
 
-        $images = DB::table('images')
-            ->get();
-        foreach ($images as $image) {
-            if (! Storage::cloud()->exists($image->filename)) {
-                $this->info('Image file missing: ' . $image->filename);
-                $this->purgeImage($image);
+            if (is_null($image)) {
+                $this->info('DB key missing: ' . $filename);
+                $this->purgeImage($hash, $directory);
             }
         }
 
@@ -71,27 +67,28 @@ class ImageCleanUp extends Command
     }
 
 
-    private function purgeImage($image)
+    private function purgeImage($hash, $filename)
     {
         if ($this->option('dry-run')) {
             $this->comment('Dry-run, nothing is deleted');
             return;
         }
 
-        Storage::cloud()->deleteDirectory($image->filename);
-        DB::table('images')->where('id', $image->id)->delete();
+        Storage::cloud()->deleteDirectory($filename);
+        Redis::del($hash);
     }
 
 
     private function clearStaleDerivatives()
     {
-        $images = DB::table('images')->get();
+        $keys = Redis::keys('*');
 
-        foreach ($images as $image) {
-            $derivatives = Storage::cloud()->directories($image->filename);
+        foreach ($keys as $key) {
+            $filename = json_decode(Redis::get($key))->filename;
+            $derivatives = Storage::cloud()->directories($filename);
 
             foreach ($derivatives as $derivative) {
-                $lastMod = Storage::cloud()->lastModified($derivative . '/' . $image->filename);
+                $lastMod = Storage::cloud()->lastModified($derivative . '/' . $filename);
 
                 $dt = Carbon::createFromTimestamp($lastMod);
                 $age = Carbon::now()->diffInDays($dt);

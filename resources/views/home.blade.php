@@ -70,12 +70,12 @@
                     µIMG
                 </div>
 
-                @if(! is_null($text))
-                    <p class="info-text">{{ $text }}</p>
-                @endif
+                <p class="info-text">
+                    A micro self-hosted image dump with CLI upload.
+                </p>
 
                 <p>
-                    {{ $images }} {{ str_plural('image', $images) }} — {{ $size }}
+                    {{ $images }} {{ str_plural('image', $images) }}
                 </p>
 
                 <div class="links">

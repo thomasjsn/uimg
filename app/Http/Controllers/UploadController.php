@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Carbon\Carbon;
-use DB;
 use Storage;
 
 class UploadController extends Controller
@@ -24,13 +24,12 @@ class UploadController extends Controller
     {
         $file = $request->file('file');
         $key = $request->input('key');
-        $keyId = $this->getKeyId($key);
 
         $fileContent = file_get_contents($file);
         $size = $file->getClientSize();
         $hash = $this->getNewHash();
 
-        if (is_null($keyId)) {
+        if ($key != env('UPLOAD_KEY')) {
             return response()->json([
                 'status' => 'error',
                 'error' => 403,
@@ -70,34 +69,32 @@ class UploadController extends Controller
 
         $filename = $hash . '.' . $ext;
         $checksum = sha1_file($file);
-        $url = config('uimg.url') . '/' . $filename;
+        $url = config('app.url') . '/' . $filename;
 
-        if (DB::table('images')->where('checksum', $checksum)->count() > 0) {
+        $existingImageHash = Redis::connection('checksum')->get($checksum);
+        $existingImageData = Redis::get($existingImageHash);
+
+        if (! is_null($existingImageHash) && ! is_null($existingImageData)) {
             \Log::info('Image already uploaded', ['img' => $filename]);
             Storage::disk()->delete($hash);
 
-            $existingImage = DB::table('images')->where('checksum', $checksum)->first();
-
             return response()->json([
                 'status'=>'ok',
-                'operation' => 'retrieve',
                 'message' => 'Image already uploaded',
-                'image_id' => $existingImage->id,
-                'url' => config('uimg.url') . '/' . $existingImage->filename
+                'image_id' => $existingImageHash,
+                'url' => config('app.url') . '/' . json_decode($existingImageData)->filename
             ], 200);
         }
 
         Storage::cloud()->put($filename . '/' . $filename, $fileContent);
 
-        DB::table('images')->insert([
-            'id' => $hash,
+        Redis::set($hash, json_encode([
             'filename' => $filename,
             'mime_type' => mime_content_type(realpath('../storage/app/' . $hash)),
-            'checksum' => $checksum,
-            'size' => $size,
-            'api_key_id' => $keyId,
-            'created' => Carbon::now()
-        ]);
+        ]));
+
+        Redis::expire($hash, 3600*24*7);
+        Redis::connection('checksum')->set($checksum, $hash);
 
         Storage::disk()->delete($hash);
 
@@ -114,32 +111,6 @@ class UploadController extends Controller
 
         return response()->json($response, 201);
     }
-
-
-	private function getNewHash($length = 6)
-    {
-        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyz';
-
-		while(1)
-		{
-			$hash = $this->generateString($permitted_chars, $length);
-			if (DB::table('images')->where('id', $hash)->count() == 0) return $hash;
-			$length++;
-		}
-	}
-
-
-    private function generateString($input, $strength)
-    {
-		$input_length = mb_strlen($input, '8bit');
-        $random_string = '';
-
-		for($i = 0; $i < $strength; $i++) {
-			$random_string .= $input[mt_rand(0, $input_length - 1)];
-		}
-
-		return $random_string;
-	}
 
 
 	function autoRotateImage($image) {
