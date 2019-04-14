@@ -122,8 +122,7 @@ Images can be resized by adding dimensions to the URL, e.g.:
 Image ratio will not change. The resized image is stored on the S3 back-end and will be used for future requests. A `X-Image-Derivative` header is added which will show if the image was found on the back-end storage, or created.
 
 ## Expiration
-Images are set to expire after 7 days when uploaded, this is set to 1 year each time an image is requested. This will make sure unused images are cleaned up, while actively used images are not.
-
+Images are set to expire after 7 days after initial upload, this is kicked back to 1 year each time the image is viewed.
 
 ## Commands
 ### Cleanup

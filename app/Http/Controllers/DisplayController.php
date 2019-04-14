@@ -30,8 +30,10 @@ class DisplayController extends Controller
         if (is_null($imageData)) abort(404);
 
         $type = json_decode($imageData)->mime_type;
+        $checksum = json_decode($imageData)->checksum;
 
         Redis::expire('image:' . $file, 3600*24*365);
+        Redis::expire('checksum:' . $checksum, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)
@@ -59,8 +61,10 @@ class DisplayController extends Controller
         if (is_null($imageData)) abort(404);
 
         $type = json_decode($imageData)->mime_type;
+        $checksum = json_decode($imageData)->checksum;
 
         Redis::expire('image:' . $file, 3600*24*365);
+        Redis::expire('checksum:' . $checksum, 3600*24*365);
 
         return response($image, 200)
             ->header('Content-Type', $type)

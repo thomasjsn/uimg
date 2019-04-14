@@ -91,10 +91,12 @@ class UploadController extends Controller
         Redis::set('image:' . $hash, json_encode([
             'filename' => $filename,
             'mime_type' => mime_content_type(realpath('../storage/app/' . $hash)),
+            'checksum' => $checksum
         ]));
-
         Redis::expire('image:' . $hash, 3600*24*7);
+
         Redis::set('checksum:' . $checksum, $hash);
+        Redis::expire('checksum:' . $checksum, 3600*24*7);
 
         Storage::disk()->delete($hash);
 
