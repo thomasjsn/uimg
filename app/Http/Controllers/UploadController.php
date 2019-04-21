@@ -25,6 +25,14 @@ class UploadController extends Controller
         $file = $request->file('file');
         $key = $request->input('key');
 
+        if (! $request->file('file')->isValid()) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 400,
+                'message' => 'Uploaded file is missing or not valid'
+            ], 400);
+        }
+
         $fileContent = file_get_contents($file);
         $size = $file->getClientSize();
         $hash = $this->getNewHash();
