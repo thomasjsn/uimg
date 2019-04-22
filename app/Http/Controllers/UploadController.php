@@ -37,7 +37,8 @@ class UploadController extends Controller
         $size = $file->getClientSize();
         $hash = $this->getNewHash();
 
-        if ($key != env('UPLOAD_KEY')) {
+        $keyData = Redis::get('apikey:' . $key);
+        if (is_null($keyData)) {
             return response()->json([
                 'status' => 'error',
                 'error' => 403,
@@ -113,6 +114,7 @@ class UploadController extends Controller
             'message' => 'Image successfully uploaded',
             'image_id' => $hash,
             'size_mib' => round($size / 1024 / 1024, 3),
+            'key_ttl' => Redis::ttl('apikey:' . $key),
             'url' => $url,
         ];
 

@@ -60,10 +60,23 @@ $ composer install
 ```
 
 ## Upload key
-Set the `UPLOAD_KEY` variable in `.env` to limit image uploading.
+Keys are stored in the Redis database:
+```
+$ redis-cli -n <db-id> set "apikey:your-key-here" "Comment, like name of key owner"
+```
+
+You may also expire keys:
+```
+$ redis-cli -n <db-id> expire "apikey:your-key-here" 2592000
+```
+
+And delete keys;
+```
+$ redis-cli -n <db-id> del "apikey:your-key-here"
+```
 
 ## Upload
-The `key` value must match a valid API key the upload to be accepted.
+The `key` value must match a valid API key for the upload to be accepted.
 
 ### Alias
 Put this in your `.bashrc` or `.zshrc`:
@@ -100,6 +113,7 @@ This will upload the image, and put the returned URL in the clipboard. This is u
   "message": "Image successfully uploaded",
   "image_id": "1u5c7w",
   "size_mib": 2.724,
+  "key_ttl": 2591528,
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
@@ -144,7 +158,10 @@ Read more about scheduling [here](https://laravel.com/docs/master/scheduling).
 Set the `FILESYSTEM_CLOUD` variable in your `.env` file to the filesystem driver of your choice. You'll find available values in the `config/filesystems.php` file. Also make sure to add all environment variables needed for that driver to your `.env` file. The `.env.sample` is set up with the `minio` driver.
 
 ## nginx config
+With rate limiting;
 ```
+limit_req_zone $binary_remote_addr zone=uimg:10m rate=2r/s;
+
 server {
     listen 80;
     server_name something.something.something.uimg;
@@ -165,6 +182,9 @@ server {
         fastcgi_index index.php;
         include fastcgi.conf;
         fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+
+        limit_req zone=uimg burst=3;
+        limit_req_status 429;
     }
 
     location ~ \.(?:ico|txt)$ {
