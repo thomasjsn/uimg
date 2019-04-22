@@ -46,6 +46,11 @@ class UploadController extends Controller
             ], 403);
         }
 
+        $key_ttl = Redis::ttl('apikey:' . $key);
+        if ($key_ttl > 0) {
+            $key_ttl = Carbon::now()->addSeconds($key_ttl)->diffInDays();
+        }
+
         Storage::disk()->put($hash, $fileContent);
 
         $type = exif_imagetype($file); //http://www.php.net/manual/en/function.exif-imagetype.php
@@ -90,7 +95,7 @@ class UploadController extends Controller
             return response()->json([
                 'status'=>'ok',
                 'message' => 'Image already uploaded',
-                'image_id' => $existingImageHash,
+                'key_ttl_d' => $key_ttl,
                 'url' => config('app.url') . '/' . json_decode($existingImageData)->filename
             ], 200);
         }
@@ -112,9 +117,8 @@ class UploadController extends Controller
 		$response = [
             'status' => 'ok',
             'message' => 'Image successfully uploaded',
-            'image_id' => $hash,
             'size_mib' => round($size / 1024 / 1024, 3),
-            'key_ttl' => Redis::ttl('apikey:' . $key),
+            'key_ttl_d' => $key_ttl,
             'url' => $url,
         ];
 

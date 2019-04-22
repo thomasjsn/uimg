@@ -12,9 +12,7 @@
 */
 
 # Home
-$router->get('/', function () {
-    return response(view('home'))->header('Cache-Control', 'public, max-age=' . 60*30);
-});
+$router->get('/', [ 'uses' => 'HomeController@show' ]);
 
 # Upload
 $router->post('/upload', [ 'uses' => 'UploadController@create' ]);

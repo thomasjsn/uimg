@@ -59,21 +59,26 @@ $ git pull
 $ composer install
 ```
 
-## Upload key
-Keys are stored in the Redis database:
+## API keys
+Issue new key:
 ```
-$ redis-cli -n <db-id> set "apikey:your-key-here" "Comment, like name of key owner"
+$ ./artisan apikey:add comment (--expire=nn)
+
+comment  :  Key description or owner
+expire   :  Days until key expires
 ```
 
-You may also expire keys:
+List all keys:
 ```
-$ redis-cli -n <db-id> expire "apikey:your-key-here" 2592000
+$ ./artisan apikey:list
 ```
 
-And delete keys;
+Remove key:
 ```
-$ redis-cli -n <db-id> del "apikey:your-key-here"
+$ ./artisan apikey:remove api-key
 ```
+
+On each post request the remaining time-to-live (TTL), in days, is returned for the key used. `-1` meaning the key will never expire.
 
 ## Upload
 The `key` value must match a valid API key for the upload to be accepted.
@@ -111,9 +116,8 @@ This will upload the image, and put the returned URL in the clipboard. This is u
 {
   "status": "ok",
   "message": "Image successfully uploaded",
-  "image_id": "1u5c7w",
   "size_mib": 2.724,
-  "key_ttl": 2591528,
+  "key_ttl_d": 29,
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```
@@ -123,7 +127,7 @@ If you try to upload an image already uploaded, the URL of that image will be re
 {
   "status": "ok",
   "message": "Image already uploaded",
-  "image_id": "1u5c7w",
+  "key_ttl_d": 29,
   "url": "https://your.uimg.instance/1u5c7w.jpg"
 }
 ```

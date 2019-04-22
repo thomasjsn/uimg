@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Redis;
 use Carbon\Carbon;
 use DB;
@@ -15,7 +14,9 @@ class ImageCleanUp extends Command
      *
      * @var string
      */
-    protected $signature = 'image:cleanup {--dry-run : Don\'t do anything} {--derivatives : Purge old derivatives}';
+    protected $signature = 'image:cleanup
+                            {--dry-run : Don\'t do anything}
+                            {--derivatives : Purge old derivatives}';
 
     /**
      * The console command description.
@@ -39,8 +40,8 @@ class ImageCleanUp extends Command
      */
     public function handle()
     {
-        $keys = Redis::scan('0', 'MATCH', 'image:*');
-        foreach ($keys[1] as $key) {
+        $keys = $this->scanAllForMatch('image:*');
+        foreach ($keys as $key) {
             $filename = json_decode(Redis::get($key))->filename;
 
             if (! Storage::cloud()->exists($filename)) {
@@ -80,9 +81,9 @@ class ImageCleanUp extends Command
 
     private function clearStaleDerivatives()
     {
-        $keys = Redis::scan('0', 'MATCH', 'image:*');
+        $keys = $this->scanAllForMatch('image:*');
 
-        foreach ($keys[1] as $key) {
+        foreach ($keys as $key) {
             $filename = json_decode(Redis::get($key))->filename;
             $derivatives = Storage::cloud()->directories($filename);
 
@@ -94,7 +95,7 @@ class ImageCleanUp extends Command
 
                 $this->line(sprintf('%s : %s', $derivative, $dt->diffForHumans()));
 
-                if ($age > 90) {
+                if ($age > 360) {
                     $this->info(sprintf('%s : Deleted, age: %d', $derivative, $age));
                     $lastMod = Storage::cloud()->deleteDirectory($derivative);
                 }

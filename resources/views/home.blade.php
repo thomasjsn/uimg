@@ -74,6 +74,12 @@
                     A micro self-hosted image dump with CLI upload.
                 </p>
 
+                <p>
+                    {{ $images }} {{ str_plural('image', $images) }}
+                    —
+                    {{ $derivatives }} {{ str_plural('derivative', $derivatives) }}
+                </p>
+
                 <div class="links">
                     <a href="https://github.com/thomasjsn/uimg">Github</a>
                     <a href="https://xpb.no">Pastebin</a>
