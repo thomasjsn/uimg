@@ -53,7 +53,17 @@ class UploadController extends Controller
 
         Storage::disk()->put($hash, $fileContent);
 
-        $type = exif_imagetype($file); //http://www.php.net/manual/en/function.exif-imagetype.php
+        try {
+            # http://www.php.net/manual/en/function.exif-imagetype.php
+            $type = exif_imagetype($file);
+        } catch (\ErrorException $e) {
+            return response()->json([
+                'status' => 'error',
+                'error' => 400,
+                'message' => 'Unable to determine image type'
+            ], 400);
+        }
+
         switch($type)
         {
             case 1: $ext = 'gif'; break;
