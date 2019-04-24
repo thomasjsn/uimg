@@ -61,6 +61,10 @@
             .info-text {
                 font-weight: 600;
             }
+
+            pre {
+                white-space: pre-wrap;
+            }
         </style>
     </head>
     <body>
@@ -73,6 +77,10 @@
                 <p class="info-text">
                     A micro self-hosted image dump with CLI upload.
                 </p>
+
+<pre>
+cat my-image.jpg | curl -s -F "file=@${1:--}" -F "key=api-key" {{ config('app.url') }}/upload | jq
+</pre>
 
                 <p>
                     {{ $images }} {{ str_plural('image', $images) }}
