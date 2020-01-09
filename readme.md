@@ -202,3 +202,6 @@ server {
 ## License
 
 µIMG is open-sourced software licensed under the [MIT license](LICENSE).
+
+## Author
+[Thomas Jensen](https://thomas.stdout.no)
